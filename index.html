@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reference Prompt Builder</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              400: '#a78bfa',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+              900: '#2e1065',
+              neon: '#06b6d4',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              fuchsia: '#d946ef'
+            },
+            surface: {
+              dark: '#0a0d14',
+              card: '#131826',
+              border: '#222a3f',
+              hover: '#1a2236'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #2e3650 #0a0d14;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0a0d14;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #232c44;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3b4668;
+    }
+
+    .glass-panel {
+      background: rgba(19, 24, 38, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glow-border:focus-within {
+      border-color: #8b5cf6;
+      box-shadow: 0 0 16px -2px rgba(139, 92, 246, 0.4);
+    }
+    .badge-glow {
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .pulse-dot {
+      animation: pulse-subtle 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-surface-dark text-slate-100 font-sans min-h-screen antialiased selection:bg-brand-600 selection:text-white pb-16">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3 bg-surface-card border border-emerald-500/40 text-emerald-400 px-5 py-3.5 rounded-xl shadow-2xl backdrop-blur-md">
+    <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>
+    <div id="toast-text" class="text-sm font-medium">Prompt copied to clipboard!</div>
+  </div>
+
+  <!-- Header -->
+  <header class="border-b border-surface-border/80 bg-surface-dark/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-brand-neon to-brand-fuchsia p-0.5 shadow-lg shadow-brand-500/20 flex items-center justify-center">
+          <div class="w-full h-full bg-surface-dark rounded-[10px] flex items-center justify-center">
+            <svg class="w-5 h-5 text-brand-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+              Reference Prompt Builder
+            </h1>
+            <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/25">Wan 2.7 Multi-Ref</span>
+          </div>
+          <p class="text-xs text-slate-400">Gemini Nano Banana & Wan 2.7 Multi-Reference Engine</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-card border border-surface-border text-xs text-slate-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 badge-glow pulse-dot"></span>
+          <span class="font-medium text-slate-300">Ready</span>
+        </div>
+        <div class="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-surface-card border border-surface-border text-xs text-slate-400 font-mono">
+          <span>Words: <strong id="word-count" class="text-slate-200">0</strong></span>
+          <span class="w-1 h-3 bg-surface-border"></span>
+          <span>Chars: <strong id="char-count" class="text-slate-200">0</strong></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 space-y-5">
+    
+    <!-- Guidelines Banner -->
+    <section class="glass-panel rounded-2xl border border-surface-border overflow-hidden">
+      <button id="toggle-guide-btn" class="w-full px-5 py-3.5 flex items-center justify-between text-left hover:bg-surface-hover/40 transition-colors">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/25 flex items-center justify-center text-xs font-bold">
+            🍌
+          </div>
+          <div>
+            <h2 class="text-sm font-semibold text-slate-200">Gemini Nano Banana Prompting Guide</h2>
+            <p class="text-xs text-slate-400">Strict reference replication: Hair & Headwear, 15 Attire Variations, & Seamless Dual Sync</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-slate-400 font-medium">
+          <span id="guide-status-text">Hide Guide</span>
+          <svg id="guide-chevron" class="w-4 h-4 transform rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </div>
+      </button>
+
+      <div id="guide-content" class="px-5 pb-4 pt-1 text-xs text-slate-300 leading-relaxed border-t border-surface-border/50">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 mt-3">
+          <div class="p-3.5 rounded-xl bg-surface-card/70 border border-surface-border">
+            <div class="font-semibold text-brand-fuchsia mb-1 flex items-center gap-1.5">
+              <span>💇‍♀️</span> Hair & Headwear Isolation
+            </div>
+            <p class="text-slate-400 leading-normal">
+              Switch between authentic Hijab / scarf draping, curated hairstyles, or roll a random open hairstyle that strictly excludes head coverings while retaining exact facial bone structure.
+            </p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-surface-card/70 border border-surface-border">
+            <div class="font-semibold text-brand-neon mb-1 flex items-center gap-1.5">
+              <span>👗</span> 15-Style Wardrobe Switcher
+            </div>
+            <p class="text-slate-400 leading-normal">
+              Redesign attire from [Image 1] across 15 curated styles with realistic drape, seam physics, and fabric textures while keeping 1:1 pose and stance fidelity.
+            </p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-surface-card/70 border border-surface-border">
+            <div class="font-semibold text-emerald-400 mb-1 flex items-center gap-1.5">
+              <span>👥</span> Dual Composite Harmonization
+            </div>
+            <p class="text-slate-400 leading-normal">
+              Integrates [Image 2] beside [Image 1] seamlessly with wrapped ambient lighting, matched depth of field, and solid-color garment sampling without patterns.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODE TABS & QUICK PRESETS -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-surface-border pb-3">
+      <!-- Mode Tabs -->
+      <div class="flex items-center gap-1.5 p-1 rounded-xl bg-surface-card border border-surface-border overflow-x-auto">
+        <button id="tab-single" onclick="switchMode('single')" class="px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 bg-brand-600 text-white shadow-md shadow-brand-600/30">
+          Single Subject Reference ([Image 1])
+        </button>
+        <button id="tab-dual" onclick="switchMode('dual')" class="px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 text-slate-400 hover:text-slate-200">
+          Dual Reference ([Image 1] + [Image 2])
+        </button>
+        <button id="tab-ugc" onclick="switchMode('ugc')" class="px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 text-slate-400 hover:text-slate-200">
+          Classic UGC Generator
+        </button>
+      </div>
+
+      <!-- Presets Quick Selector -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+        <span class="text-xs text-slate-400 whitespace-nowrap hidden sm:inline">Presets:</span>
+        <button onclick="applyPreset('clone_1to1')" class="px-2.5 py-1.5 rounded-lg bg-surface-card hover:bg-surface-hover border border-surface-border text-slate-300 text-xs font-medium transition whitespace-nowrap">1:1 Replica</button>
+        <button onclick="applyPreset('hijab_chic')" class="px-2.5 py-1.5 rounded-lg bg-surface-card hover:bg-surface-hover border border-surface-border text-brand-fuchsia text-xs font-medium transition whitespace-nowrap">Silk Hijab + Blazer</button>
+        <button onclick="applyPreset('random_hair')" class="px-2.5 py-1.5 rounded-lg bg-surface-card hover:bg-surface-hover border border-surface-border text-brand-neon text-xs font-medium transition whitespace-nowrap">🎲 Random Hair (No Scarf)</button>
+        <button onclick="applyPreset('old_money')" class="px-2.5 py-1.5 rounded-lg bg-surface-card hover:bg-surface-hover border border-surface-border text-emerald-400 text-xs font-medium transition whitespace-nowrap">Old Money Chic</button>
+      </div>
+    </div>
+
+    <!-- MAIN TWO COLUMN WORKBENCH -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- LEFT COLUMN: CONTROLS & IMAGE UPLOAD (7 cols) -->
+      <div class="lg:col-span-7 space-y-5">
+
+        <!-- ================= SINGLE SUBJECT IMAGE UPLOAD ================= -->
+        <div id="single-image-section" class="glass-panel p-4 sm:p-5 rounded-2xl border border-surface-border space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs sm:text-sm font-bold text-slate-200 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-brand-neon"></span>
+              Optional Reference Picture ([Image 1])
+            </h3>
+            <span class="text-[11px] text-slate-400">Primary base scene, stance & facial anchor</span>
+          </div>
+
+          <div class="relative group border-2 border-dashed border-surface-border hover:border-brand-neon/60 rounded-xl p-3 bg-surface-card/40 transition-colors flex flex-col justify-between min-h-[160px]">
+            <input type="file" id="upload-single-img" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="handleSingleImageUpload(event)">
+            
+            <div id="single-preview-container" class="hidden relative h-36 w-full rounded-lg overflow-hidden bg-black/40">
+              <img id="single-img-preview" class="w-full h-full object-cover" alt="Image 1 Reference">
+              <button type="button" onclick="removeSingleImage(event)" class="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-black/75 hover:bg-rose-600 text-white transition text-xs shadow-lg">
+                ✕
+              </button>
+              <div class="absolute bottom-2 left-2 px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-sm text-[11px] font-mono text-cyan-300 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                [Image 1] Primary Reference Loaded
+              </div>
+            </div>
+
+            <div id="single-empty-state" class="flex flex-col items-center justify-center text-center py-6 space-y-2 pointer-events-none">
+              <div class="w-11 h-11 rounded-full bg-surface-hover flex items-center justify-center text-brand-neon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </div>
+              <div>
+                <div class="text-xs font-semibold text-slate-200">Click or Drag & Drop [Image 1] Reference</div>
+                <div class="text-[11px] text-slate-500">Locks identity, bone structure, pose & lighting atmosphere</div>
+              </div>
+            </div>
+
+            <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surface-border/40">
+              <span class="font-mono text-brand-neon">[Image 1] Primary Anchor</span>
+              <span class="text-slate-500">Optional · Embeds into standard syntax</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= DUAL REFERENCE UPLOAD BOXES ================= -->
+        <div id="dual-images-section" class="hidden glass-panel p-4 sm:p-5 rounded-2xl border border-surface-border space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs sm:text-sm font-bold text-slate-200 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              Optional Reference Pictures ([Image 1] + [Image 2])
+            </h3>
+            <span class="text-[11px] text-slate-400">Two-subject reference sync</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <!-- Reference Image 1 -->
+            <div class="relative group border-2 border-dashed border-surface-border hover:border-brand-500/60 rounded-xl p-3 bg-surface-card/40 transition-colors flex flex-col justify-between min-h-[160px]">
+              <input type="file" id="upload-dual-img-1" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="handleDualImageUpload(event, 1)">
+              
+              <div id="dual-preview-container-1" class="hidden relative h-32 w-full rounded-lg overflow-hidden bg-black/40">
+                <img id="dual-img-preview-1" class="w-full h-full object-cover" alt="Image 1 Reference">
+                <button type="button" onclick="removeDualImage(1, event)" class="absolute top-1.5 right-1.5 z-20 p-1 rounded-full bg-black/70 hover:bg-rose-600 text-white transition text-xs">✕</button>
+                <div class="absolute bottom-1 left-1.5 px-2 py-0.5 rounded bg-black/70 text-[10px] font-mono text-brand-300">[Image 1] Base Female</div>
+              </div>
+
+              <div id="dual-empty-state-1" class="flex flex-col items-center justify-center text-center py-5 space-y-1.5 pointer-events-none">
+                <div class="w-9 h-9 rounded-full bg-surface-hover flex items-center justify-center text-brand-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </div>
+                <div>
+                  <div class="text-xs font-semibold text-slate-300">[Image 1] Primary Scene & Pose</div>
+                  <div class="text-[10px] text-slate-500">Base subject & environment anchor</div>
+                </div>
+              </div>
+
+              <div class="text-[10px] text-slate-400 flex items-center justify-between pt-1.5 border-t border-surface-border/40">
+                <span class="font-mono text-brand-400">[Image 1]</span>
+                <span class="text-slate-500">Primary Anchor</span>
+              </div>
+            </div>
+
+            <!-- Reference Image 2 -->
+            <div class="relative group border-2 border-dashed border-surface-border hover:border-brand-neon/60 rounded-xl p-3 bg-surface-card/40 transition-colors flex flex-col justify-between min-h-[160px]">
+              <input type="file" id="upload-dual-img-2" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="handleDualImageUpload(event, 2)">
+              
+              <div id="dual-preview-container-2" class="hidden relative h-32 w-full rounded-lg overflow-hidden bg-black/40">
+                <img id="dual-img-preview-2" class="w-full h-full object-cover" alt="Image 2 Reference">
+                <button type="button" onclick="removeDualImage(2, event)" class="absolute top-1.5 right-1.5 z-20 p-1 rounded-full bg-black/70 hover:bg-rose-600 text-white transition text-xs">✕</button>
+                <div class="absolute bottom-1 left-1.5 px-2 py-0.5 rounded bg-black/70 text-[10px] font-mono text-cyan-300">[Image 2] Companion</div>
+              </div>
+
+              <div id="dual-empty-state-2" class="flex flex-col items-center justify-center text-center py-5 space-y-1.5 pointer-events-none">
+                <div class="w-9 h-9 rounded-full bg-surface-hover flex items-center justify-center text-brand-neon">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </div>
+                <div>
+                  <div class="text-xs font-semibold text-slate-300">[Image 2] Secondary Subject</div>
+                  <div class="text-[10px] text-slate-500">Secondary person identity to integrate</div>
+                </div>
+              </div>
+
+              <div class="text-[10px] text-slate-400 flex items-center justify-between pt-1.5 border-t border-surface-border/40">
+                <span class="font-mono text-cyan-400">[Image 2]</span>
+                <span class="text-slate-500">Secondary Person</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SINGLE SUBJECT CONTROLS PANEL ================= -->
+        <div id="single-controls-panel" class="glass-panel p-5 rounded-2xl border border-surface-border space-y-4">
+          <div class="flex items-center justify-between pb-2 border-b border-surface-border">
+            <h3 class="text-xs sm:text-sm font-bold text-slate-200">Single Subject Parameters</h3>
+            <span class="text-[11px] text-brand-neon font-mono">1-Reference Architecture</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Aspect Ratio -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Aspect Ratio</label>
+              <select id="single-aspect-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-neon">
+                <option value="9:16 aspect ratio" selected>9:16 (Vertical Phone / TikTok / Reels)</option>
+                <option value="16:9 aspect ratio">16:9 (Cinematic Landscape / Widescreen)</option>
+                <option value="1:1 aspect ratio">1:1 (Square Feed Post)</option>
+                <option value="4:5 aspect ratio">4:5 (Instagram Portrait)</option>
+                <option value="21:9 aspect ratio">21:9 (Ultrawide Anamorphic)</option>
+              </select>
+            </div>
+
+            <!-- Subject Type & Pronouns -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Subject Identity</label>
+              <select id="single-subject-gender-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-neon">
+                <option value="woman" selected>Female Subject (The woman from [Image 1])</option>
+                <option value="man">Male Subject (The man from [Image 1])</option>
+                <option value="person">Individual Subject (The person from [Image 1])</option>
+              </select>
+            </div>
+
+            <!-- 15 CLOTHING STYLES DROPDOWN -->
+            <div class="sm:col-span-2 p-3.5 rounded-xl bg-surface-card/80 border border-brand-500/30">
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span class="text-brand-neon">👗</span> Clothing Style ([Image 1] Modification Engine)
+                </label>
+                <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">15 Styles Available</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mb-2.5">Redesign attire from Image 1 while locking face, bone structure, head tilt, and pose.</p>
+              
+              <select id="single-clothing-style-select" onchange="buildPrompt()" class="w-full bg-surface-dark border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-100 font-medium focus:outline-none focus:border-brand-neon">
+                <option value="keep_original" selected>1. Keep Original Attire from [Image 1]</option>
+                <option value="smart_casual">2. Modern Smart-Casual (Oversized blazer, silk tank, tailored high-waist trousers)</option>
+                <option value="parisian_chic">3. Parisian Chic (Ribbed turtleneck, tailored houndstooth coat, wool beret)</option>
+                <option value="minimalist_luxury">4. Minimalist Luxury (Monochrome cream cashmere sweater, wide-leg satin trousers)</option>
+                <option value="cyberpunk_techwear">5. Cyberpunk Techwear (Matte-black waterproof hooded shell, tactical cargo pants, modular straps)</option>
+                <option value="streetwear_oversized">6. Streetwear Oversized (Heavyweight vintage acid-wash boxy hoodie, relaxed denim)</option>
+                <option value="elegant_evening">7. Elegant Evening Wear (Floor-length emerald satin bias-cut slip gown with open back)</option>
+                <option value="old_money">8. Old Money Aesthetic (Beige cable-knit polo sweater over shoulders, crisp white linen button-down)</option>
+                <option value="executive_power">9. Executive Power Suit (Structured double-breasted charcoal wool suit, peaked lapels)</option>
+                <option value="bohemian_summer">10. Bohemian Summer Linen (Breezy ivory linen wrap top with flowy tiered maxi skirt)</option>
+                <option value="athletic_athleisure">11. Athletic Athleisure (Seamless ribbed compression zip jacket, matching high-waisted leggings)</option>
+                <option value="edgy_grunge">12. Edgy Grunge Leather (Distressed vintage leather biker jacket, fitted cotton top, dark wash jeans)</option>
+                <option value="haute_couture">13. Haute Couture Avant-Garde (Sculptural asymmetric pleated top with architectural high-fashion silhouette)</option>
+                <option value="cozy_knit">14. Cozy Knit Lounge (Chunky textured waffle-knit cardigan, relaxed soft-cotton rib pants)</option>
+                <option value="mediterranean_resort">15. Mediterranean Resort (Flowing silk patterned kaftan wrap dress with coastal breeze drape)</option>
+              </select>
+            </div>
+
+            <!-- NEW: HAIR STYLE & HEADWEAR CATEGORY DROPDOWN -->
+            <div class="sm:col-span-2 p-3.5 rounded-xl bg-surface-card/80 border border-brand-fuchsia/30">
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span class="text-brand-fuchsia">💇‍♀️</span> Hair Style & Headwear ([Image 1] Modification Engine)
+                </label>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" id="reroll-random-hair-btn" onclick="triggerRandomHairRoll()" title="Re-roll a new open hairstyle" class="px-2 py-0.5 text-[10px] font-semibold rounded bg-brand-fuchsia/20 hover:bg-brand-fuchsia/30 text-brand-fuchsia border border-brand-fuchsia/40 transition flex items-center gap-1">
+                    🎲 Re-roll
+                  </button>
+                  <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-brand-fuchsia/20 text-brand-fuchsia border border-brand-fuchsia/30">Hair & Headwear</span>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-400 mb-2.5">Choose between keeping original hair, graceful hijab / scarf wraps, specific hair cuts, or rolling random open hairstyles (strictly excluding head coverings).</p>
+              
+              <select id="single-hair-style-select" onchange="handleHairSelectChange()" class="w-full bg-surface-dark border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-100 font-medium focus:outline-none focus:border-brand-fuchsia">
+                <option value="keep_original" selected>1. Keep Original Hair from [Image 1]</option>
+                <optgroup label="Headwear & Hijab Styles">
+                  <option value="headwear_hijab_silk">[Headwear] Elegant Silk Hijab (Neatly draped soft silk hijab wrapped elegantly framing facial structure)</option>
+                  <option value="headwear_chiffon_scarf">[Headwear] Lightweight Chiffon Scarf (Airy relaxed headscarf gracefully pinned with soft fabric folds)</option>
+                  <option value="headwear_modal_hijab">[Headwear] Modal Jersey Hijab (Clean, contoured modern wrap hijab in neutral tones)</option>
+                  <option value="headwear_silk_bandana">[Headwear] Printed Silk Bandana / Headscarf (Chic vintage silk hair scarf tied back)</option>
+                </optgroup>
+                <optgroup label="Open Hairstyles">
+                  <option value="beach_waves">Voluminous Loose Beach Waves (Long layered brunette waves with natural bounce and shine)</option>
+                  <option value="sleek_middle_part">Sleek Middle-Part Straight Hair (Glass-hair finish falling neatly over shoulders)</option>
+                  <option value="high_sleek_ponytail">High Sleek Ponytail (Tightly pulled high ponytail with neat flyaway control)</option>
+                  <option value="textured_messy_bun">Textured Messy Bun (Effortless casual top-knot bun with face-framing curtain tendrils)</option>
+                  <option value="chic_french_bob">Chic French Bob (Jawline-length blunt cropped bob with soft wispy bangs)</option>
+                  <option value="curtain_bangs_blowout">Curtain Bangs & Layered Blowout (90s bouncy salon blowout with sweeping face-framing fringe)</option>
+                  <option value="tight_curly_afro">Tight Curly Afro / Defined Coils (Natural high-volume defined coiled curls with rich hydration)</option>
+                  <option value="box_braids">Braided Box Braids / Cornrows (Neat, clean scalp-parted knotless protective braids)</option>
+                  <option value="pixie_cut">Pixie Cut with Side Sweep (Modern edgy cropped pixie with textured side-swept fringe)</option>
+                  <option value="half_up_curls">Half-Up Half-Down Soft Curls (Romantic pinned-back crown with cascading loose curls)</option>
+                </optgroup>
+                <optgroup label="Automated Random Mode">
+                  <option value="random_hair_no_covering">🎲 Random Hairstyle (Excludes Hijab, Scarf & all head covering accessories)</option>
+                </optgroup>
+              </select>
+
+              <!-- Display box for current random hair pick -->
+              <div id="random-hair-preview-badge" class="hidden mt-2 p-2 rounded-lg bg-surface-dark/80 border border-brand-fuchsia/40 text-[11px] text-fuchsia-300 flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-brand-fuchsia animate-ping"></span>
+                  <span>Active Random Hairstyle: <strong id="random-hair-name" class="text-white">Voluminous Loose Beach Waves</strong></span>
+                </div>
+                <span class="text-[10px] text-slate-400 font-mono">Head coverings excluded</span>
+              </div>
+            </div>
+
+            <!-- Pose & Stance Replication Rule -->
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Pose & Stance Strictness</label>
+              <select id="single-pose-rule-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-neon">
+                <option value="exact_1to1" selected>Exact 1:1 Pose Replication (Identical stance, posture, hand placement, head tilt, eyeline)</option>
+                <option value="micro_motion">Subtle Micro-Movement (Keep stance, but allow organic talking / micro natural head turn)</option>
+                <option value="relaxed_pose">Same Identity with Dynamic Stance (Naturally walking / shifting weight, steady eye contact)</option>
+                <option value="seated_pose">Natural Seated Variation (Preserve exact face & identity, adapted seated posture)</option>
+              </select>
+            </div>
+
+            <!-- Background & Environment -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Environment Preservation</label>
+              <select id="single-env-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-neon">
+                <option value="preserved_exact" selected>Preserved Entire Background & Depth from [Image 1]</option>
+                <option value="balcony_golden">Golden hour aesthetic balcony with soft bokeh background</option>
+                <option value="minimalist_interior">Modern minimalist luxury interior with soft architectural depth</option>
+                <option value="urban_street">Sunlit metropolitan street with natural cinematic background blur</option>
+              </select>
+            </div>
+
+            <!-- Camera & UGC Lens Aesthetics -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Camera & Framing</label>
+              <select id="single-camera-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-neon">
+                <option value="full_length" selected>Cinematic full-length photograph (wide eye-level)</option>
+                <option value="medium_closeup">Medium close-up portrait with eye-level perspective</option>
+                <option value="handheld_vlog">Handheld smartphone vlog angle with authentic slight lens wobble</option>
+                <option value="mirror_selfie">Clean crisp mirror selfie composition with natural handheld grip</option>
+              </select>
+            </div>
+
+            <!-- Render Optics & Lighting -->
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Lighting & Texture Fidelity</label>
+              <select id="single-render-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-neon">
+                <option value="exact_wrap" selected>Atmospheric lighting preserved from [Image 1] with hyper-realistic skin</option>
+                <option value="iphone_natural">Shot on iPhone 16 Pro, natural diffused morning light, fine pores</option>
+                <option value="golden_hour_rim">Golden hour sunset glow, warm rim illumination, high micro-detail</option>
+                <option value="soft_studio">Diffused softbox fill light, ultra-high skin fidelity, natural depth</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= DUAL MODE CONTROLS FORM ================= -->
+        <div id="dual-controls-panel" class="hidden glass-panel p-5 rounded-2xl border border-surface-border space-y-4">
+          <div class="flex items-center justify-between pb-2 border-b border-surface-border">
+            <h3 class="text-xs sm:text-sm font-bold text-slate-200">Dual Reference Composite Parameters</h3>
+            <span class="text-[11px] text-brand-400 font-mono">Strict 2-Image Fusion</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Aspect Ratio -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Aspect Ratio</label>
+              <select id="dual-aspect-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                <option value="9:16 aspect ratio" selected>9:16 (Vertical Phone / TikTok / Reels)</option>
+                <option value="16:9 aspect ratio">16:9 (Cinematic Landscape / Widescreen)</option>
+                <option value="1:1 aspect ratio">1:1 (Square Feed Post)</option>
+                <option value="4:5 aspect ratio">4:5 (Instagram Portrait)</option>
+              </select>
+            </div>
+
+            <!-- Primary Subject & Pose Strictness -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Primary Subject & Pose ([Image 1])</label>
+              <select id="dual-fidelity-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                <option value="strict" selected>Exact 1:1 replication (Features, pose, cosmetics)</option>
+                <option value="high">High fidelity replica (Allow micro natural expression shift)</option>
+                <option value="relaxed">Pose extension (Same subject, relaxed pose)</option>
+              </select>
+            </div>
+
+            <!-- Subject 1 Attire Selector in Dual Mode -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Subject 1 Attire ([Image 1])</label>
+              <select id="dual-subject1-clothing-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                <option value="keep_original" selected>1. Keep Original Attire from [Image 1]</option>
+                <option value="smart_casual">2. Modern Smart-Casual (Oversized blazer, silk tank, trousers)</option>
+                <option value="parisian_chic">3. Parisian Chic (Ribbed turtleneck, houndstooth coat)</option>
+                <option value="minimalist_luxury">4. Minimalist Luxury (Cream cashmere, wide-leg satin)</option>
+                <option value="cyberpunk_techwear">5. Cyberpunk Techwear (Matte-black shell, tactical straps)</option>
+                <option value="streetwear_oversized">6. Streetwear Oversized (Acid-wash hoodie, relaxed denim)</option>
+                <option value="elegant_evening">7. Elegant Evening Wear (Floor-length emerald satin slip gown)</option>
+                <option value="old_money">8. Old Money Aesthetic (Beige cable-knit polo, white linen)</option>
+                <option value="executive_power">9. Executive Power Suit (Pinstripe wool suit, peaked lapels)</option>
+                <option value="bohemian_summer">10. Bohemian Summer Linen (Ivory linen wrap, tiered maxi skirt)</option>
+                <option value="athletic_athleisure">11. Athletic Athleisure (Seamless ribbed compression zip set)</option>
+                <option value="edgy_grunge">12. Edgy Grunge Leather (Distressed biker jacket, cotton top)</option>
+                <option value="haute_couture">13. Haute Couture Avant-Garde (Sculptural asymmetric top)</option>
+                <option value="cozy_knit">14. Cozy Knit Lounge (Chunky waffle-knit cardigan, rib pants)</option>
+                <option value="mediterranean_resort">15. Mediterranean Resort (Silk patterned kaftan wrap dress)</option>
+              </select>
+            </div>
+
+            <!-- Subject 1 Hair / Headwear Selector in Dual Mode -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Subject 1 Hair / Headwear ([Image 1])</label>
+              <select id="dual-subject1-hair-select" onchange="handleDualHairSelectChange()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                <option value="keep_original" selected>1. Keep Original Hair from [Image 1]</option>
+                <option value="headwear_hijab_silk">[Headwear] Elegant Silk Hijab</option>
+                <option value="headwear_chiffon_scarf">[Headwear] Lightweight Chiffon Scarf</option>
+                <option value="headwear_modal_hijab">[Headwear] Modal Jersey Hijab</option>
+                <option value="headwear_silk_bandana">[Headwear] Silk Bandana / Headscarf</option>
+                <option value="beach_waves">Voluminous Beach Waves</option>
+                <option value="sleek_middle_part">Sleek Middle-Part Straight Hair</option>
+                <option value="high_sleek_ponytail">High Sleek Ponytail</option>
+                <option value="textured_messy_bun">Textured Messy Bun</option>
+                <option value="chic_french_bob">Chic French Bob</option>
+                <option value="curtain_bangs_blowout">Curtain Bangs Blowout</option>
+                <option value="tight_curly_afro">Tight Curly Afro</option>
+                <option value="box_braids">Braided Box Braids</option>
+                <option value="pixie_cut">Pixie Cut with Side Sweep</option>
+                <option value="half_up_curls">Half-Up Half-Down Soft Curls</option>
+                <option value="random_hair_no_covering">🎲 Random Hair (Excludes Head Coverings)</option>
+              </select>
+            </div>
+
+            <!-- Secondary Positioning -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Secondary Position ([Image 2])</label>
+              <select id="dual-pos-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                <option value="directly beside her on the right" selected>Directly beside her on the right</option>
+                <option value="directly beside her on the left">Directly beside her on the left</option>
+                <option value="standing slightly behind her shoulder">Standing slightly behind her shoulder</option>
+                <option value="seated directly beside her">Seated directly beside her</option>
+              </select>
+            </div>
+
+            <!-- Secondary Height & Stance -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Secondary Height & Stance</label>
+              <select id="dual-stance-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                <option value="standing noticeably taller than the woman, facing the camera with a neutral, grounded posture" selected>Noticeably taller, neutral grounded posture</option>
+                <option value="matching her eye-level height, facing the camera with relaxed confidence">Equal eye-level height, relaxed confidence</option>
+                <option value="taller, leaning casually with arms relaxed, looking towards her">Taller, casual lean, dynamic stance</option>
+              </select>
+            </div>
+
+            <!-- Wardrobe Color Coordination Rule -->
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Subject 2 Wardrobe Coordination & Fabric Sampling</label>
+              <select id="dual-wardrobe-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                <option value="sample_prominent_solid" selected>Sample One Prominent Solid Color from [Image 1] (No patterns, solid clean fabric, neutral complement)</option>
+                <option value="monochrome_sync">Monochrome Match (Tonal black/white/charcoal matching woman's palette)</option>
+                <option value="earth_tone_duo">Harmonized Earth Tones (Warm sand, espresso, and olive complementary solids)</option>
+                <option value="exact_replica_attire">Retain original outfit from [Image 2] without color modification</option>
+              </select>
+            </div>
+
+            <!-- Composition & Framing Style -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Composition & Framing</label>
+              <select id="dual-comp-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                <option value="full_length" selected>Cohesive, cinematic, full-length two-shot (wide eye-level)</option>
+                <option value="medium_two_shot">Medium two-shot framing (waist-up, intimate eye-level)</option>
+                <option value="vlog_wide">Handheld smartphone vlog wide-angle framing (slight wobble)</option>
+              </select>
+            </div>
+
+            <!-- Lighting Wrap & Environment -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Lighting Integration</label>
+              <select id="dual-lighting-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                <option value="wrap_natural" selected>Lighting from [Image 1] wraps naturally across both subjects</option>
+                <option value="diffused_soft">Diffused soft ambient light across both subjects with consistent depth</option>
+                <option value="golden_hour">Golden hour directional sun rim light wrapping both subjects</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= CLASSIC UGC CONTROLS FORM ================= -->
+        <div id="ugc-controls-panel" class="hidden glass-panel p-5 rounded-2xl border border-surface-border space-y-4">
+          <div class="flex items-center justify-between pb-2 border-b border-surface-border">
+            <h3 class="text-xs sm:text-sm font-bold text-slate-200">Classic UGC Influencer Formula</h3>
+            <span class="text-[11px] text-emerald-400 font-mono">No-Reference Standard</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">UGC Setting</label>
+              <select id="ugc-setting-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                <option value="Golden Hour Balcony overlooking city skyline" selected>Golden Hour Balcony</option>
+                <option value="Modern Minimalist Kitchen with marble island">Modern Minimalist Kitchen</option>
+                <option value="Cozy Sunlit Bedroom with linen sheets">Cozy Sunlit Bedroom</option>
+                <option value="Car Interior / Dashboard during commute">Car Interior / Dashboard</option>
+                <option value="Aesthetic Parisian style street cafe">Aesthetic Street Cafe</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Camera Style</label>
+              <select id="ugc-camera-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                <option value="Handheld Smartphone Footage (slight wobble)" selected>Handheld Smartphone Footage (slight wobble)</option>
+                <option value="Front-facing Selfie Cam">Front-facing Selfie Cam</option>
+                <option value="Tripod Vlog Angle">Tripod Vlog Angle</option>
+                <option value="Mirror Selfie">Mirror Selfie</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Hook / Action</label>
+              <select id="ugc-action-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                <option value="GRWM Outfit Transition (before/after snap)" selected>GRWM Outfit Transition (before/after snap)</option>
+                <option value="Talking Directly to Camera">Talking Directly to Camera</option>
+                <option value="Product Unboxing / Showcase">Product Unboxing / Showcase</option>
+                <option value="Day in the Life Cut">Day in the Life Cut</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Lighting</label>
+              <select id="ugc-lighting-select" onchange="buildPrompt()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                <option value="Golden Hour Sunset glow" selected>Golden Hour Sunset glow</option>
+                <option value="Ring light with soft fill">Ring light with soft fill</option>
+                <option value="Natural diffused window light">Natural diffused window light</option>
+                <option value="Direct harsh sunlight">Direct harsh sunlight</option>
+              </select>
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Subject & Wardrobe Description</label>
+              <input type="text" id="ugc-subject-input" oninput="buildPrompt()" value="Exactly one beautiful woman, early 20s, minimal makeup, wavy brunette hair, glowing skin. wearing Oversized beige blazer and gold necklaces" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: PROMPT OUTPUT DISPLAY BOX & ACTIONS (5 cols) -->
+      <div class="lg:col-span-5 space-y-4">
+        
+        <div class="glass-panel p-5 rounded-2xl border border-surface-border flex flex-col h-full shadow-2xl relative">
+          
+          <div class="flex items-center justify-between pb-3 border-b border-surface-border">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-mono font-bold tracking-wider text-brand-neon uppercase flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-brand-neon animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                AUTO_AWESOME FINAL OPTIMIZED UGC PROMPT
+              </span>
+            </div>
+            <button onclick="resetCurrentFormula()" title="Reset to base template" class="text-xs text-slate-400 hover:text-brand-300 transition flex items-center gap-1 font-mono">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Reset
+            </button>
+          </div>
+
+          <!-- Prompt Text Area -->
+          <div class="relative flex-1 mt-3">
+            <textarea id="prompt-output" rows="18" class="w-full h-full min-h-[440px] bg-surface-card/95 font-mono text-xs leading-relaxed text-slate-200 p-4 rounded-xl border border-surface-border focus:outline-none focus:border-brand-neon glow-border resize-y selection:bg-brand-600/40" spellcheck="false" oninput="updateMetrics()"></textarea>
+          </div>
+
+          <!-- Action Buttons Bar -->
+          <div class="mt-4 pt-3 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="text-[11px] text-slate-400 w-full sm:w-auto text-center sm:text-left flex items-center gap-1.5 justify-center sm:justify-start">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span>Wan 2.7 & Gemini Nano Banana Ready</span>
+            </div>
+
+            <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+              <button onclick="formatWhitespace()" class="px-3 py-2.5 rounded-xl bg-surface-card hover:bg-surface-hover border border-surface-border text-xs text-slate-300 transition" title="Format lines & remove extra spaces">
+                Clean
+              </button>
+              
+              <button id="copy-btn" onclick="copyPromptToClipboard()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-neon hover:from-brand-500 hover:to-cyan-400 active:scale-95 text-white text-xs font-semibold shadow-lg shadow-brand-600/25 transition">
+                <svg id="copy-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <span id="copy-btn-text">Copy UGC Prompt</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    // Global active mode: 'single', 'dual', or 'ugc'
+    let currentMode = 'single';
+
+    // 15 Distinct Clothing Style Descriptions Map
+    const clothingStyleMap = {
+      keep_original: "KEEP_ORIGINAL",
+      smart_casual: "a modern smart-casual outfit featuring a sharp oversized neutral blazer over a luxe silk tank top, fluid high-waisted tailored trousers, and minimal gold jewelry",
+      parisian_chic: "an effortless Parisian chic ensemble consisting of a fine ribbed knit turtleneck, a tailored houndstooth wool coat, straight-cut dark denim, and a classic wool beret",
+      minimalist_luxury: "a clean minimalist luxury aesthetic featuring a monochrome cream cashmere relaxed sweater paired with wide-leg satin trousers and an Italian leather belt",
+      cyberpunk_techwear: "sleek cyberpunk-inspired techwear comprising a matte-black waterproof hooded technical shell jacket with modular utility straps and tailored tactical cargo pants",
+      streetwear_oversized: "authentic high-street oversized streetwear featuring a heavyweight vintage acid-wash boxy hoodie, relaxed drop-crotch raw denim, and subtle silver link chains",
+      elegant_evening: "a floor-length emerald green satin bias-cut slip gown featuring an elegant open back, delicate spaghetti straps, and clean fluid hemline motion",
+      old_money: "clean luxury old-money resort styling with a beige cable-knit polo sweater draped over the shoulders, a crisp open-collar white linen button-down, and pleated linen slacks",
+      executive_power: "a commanding executive power suit featuring a structured double-breasted charcoal wool blazer with sharp peaked lapels, matching tailored trousers, and a crisp silk inner shirt",
+      bohemian_summer: "a breezy bohemian summer ensemble featuring an ivory linen wrap top with flowing flared sleeves and a tiered flowing maxi skirt in organic natural fibers",
+      athletic_athleisure: "premium sculpted athletic athleisure featuring a seamless ribbed compression zip-front jacket, high-waisted contour leggings, and clean matte finish",
+      edgy_grunge: "vintage edgy grunge rock styling consisting of a distressed heavyweight black leather biker jacket over a soft fitted cotton crewneck with worn dark-wash denim",
+      haute_couture: "sculptural haute couture avant-garde attire featuring an architectural asymmetric pleated wrap top with structured dimensional shoulders and tailoring",
+      cozy_knit: "cozy textured loungewear comprising a chunky waffle-knit open-front cardigan layered over a soft scoop-neck tank with relaxed rib-knit pants",
+      mediterranean_resort: "a breezy Mediterranean resort look featuring a sweeping patterned silk kaftan wrap dress that catches natural airflow with elegant coastal draping"
+    };
+
+    // Granular Hair & Headwear Map
+    const hairStyleMap = {
+      keep_original: "KEEP_ORIGINAL",
+      // Headwear options:
+      headwear_hijab_silk: "an elegant soft silk hijab wrapped neatly and gracefully around her head and neck, framing her facial bone structure with smooth, fluid folds and zero loose hair visible",
+      headwear_chiffon_scarf: "an airy, lightweight chiffon headscarf gracefully pinned beneath the chin with soft relaxed fabric draping framing her face elegantly",
+      headwear_modal_hijab: "a contoured modern modal jersey wrap hijab in neutral muted tones, cleanly styled with a smooth, tailored fit around her jawline",
+      headwear_silk_bandana: "a chic vintage printed silk bandana scarf tied back neatly at the nape of the neck, letting her facial features and jawline take center focus",
+      // Open Hairstyles (Strictly no head coverings):
+      beach_waves: "long, voluminous loose beach waves parted naturally with healthy bounce, glossy texture, and organic movement falling gently past her shoulders",
+      sleek_middle_part: "pin-straight glass-hair falling neatly over her shoulders with a precise, razor-sharp middle part and ultra-sleek flyaway control",
+      high_sleek_ponytail: "a tightly pulled high ponytail secured at the crown with a sleek, polished finish accentuating her cheekbones and jawline",
+      textured_messy_bun: "an effortless textured top-knot messy bun with delicate face-framing curtain tendrils softly brushing her cheekbones",
+      chic_french_bob: "a classic Parisian blunt-cut French bob hitting right at the jawline, styled with subtle texture and soft wispy fringe",
+      curtain_bangs_blowout: "a bouncy 90s salon layered blowout with voluminous curtain bangs sweeping effortlessly around her cheekbones and temples",
+      tight_curly_afro: "a defined, high-volume tight curly afro with rich coil definition, organic spring, and hydrated natural hair texture",
+      box_braids: "cleanly parted knotless box braids falling smoothly over her shoulders with neat scalp geometry and sleek polished finish",
+      pixie_cut: "a modern edgy cropped pixie cut with soft textured layers and a side-swept fringe accentuating her eyes and brow structure",
+      half_up_curls: "a romantic half-up half-down hairstyle with a softly pinned crown and cascading soft curls flowing down her back"
+    };
+
+    // List of hair keys that strictly exclude head coverings for the random generator
+    const openHairstylesList = [
+      'beach_waves',
+      'sleek_middle_part',
+      'high_sleek_ponytail',
+      'textured_messy_bun',
+      'chic_french_bob',
+      'curtain_bangs_blowout',
+      'tight_curly_afro',
+      'box_braids',
+      'pixie_cut',
+      'half_up_curls'
+    ];
+
+    // Current assigned random pick
+    let activeRandomHairKey = 'beach_waves';
+
+    // Collapsible guide logic
+    const toggleGuideBtn = document.getElementById('toggle-guide-btn');
+    const guideContent = document.getElementById('guide-content');
+    const guideChevron = document.getElementById('guide-chevron');
+    const guideStatusText = document.getElementById('guide-status-text');
+
+    toggleGuideBtn.addEventListener('click', () => {
+      const isHidden = guideContent.classList.toggle('hidden');
+      guideChevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+      guideStatusText.textContent = isHidden ? 'Show Guide' : 'Hide Guide';
+    });
+
+    // Hair Style change handler (reveals preview badge if random selected)
+    function handleHairSelectChange() {
+      const selectVal = document.getElementById('single-hair-style-select').value;
+      const previewBadge = document.getElementById('random-hair-preview-badge');
+
+      if (selectVal === 'random_hair_no_covering') {
+        pickRandomHairstyle();
+        previewBadge.classList.remove('hidden');
+      } else {
+        previewBadge.classList.add('hidden');
+      }
+      buildPrompt();
+    }
+
+    function handleDualHairSelectChange() {
+      const selectVal = document.getElementById('dual-subject1-hair-select').value;
+      if (selectVal === 'random_hair_no_covering') {
+        pickRandomHairstyle();
+      }
+      buildPrompt();
+    }
+
+    function pickRandomHairstyle() {
+      const randomIndex = Math.floor(Math.random() * openHairstylesList.length);
+      activeRandomHairKey = openHairstylesList[randomIndex];
+      
+      const readableNameMap = {
+        beach_waves: "Voluminous Loose Beach Waves",
+        sleek_middle_part: "Sleek Middle-Part Straight Hair",
+        high_sleek_ponytail: "High Sleek Ponytail",
+        textured_messy_bun: "Textured Messy Bun with Tendrils",
+        chic_french_bob: "Chic Parisian French Bob",
+        curtain_bangs_blowout: "Curtain Bangs Salon Blowout",
+        tight_curly_afro: "Defined High-Volume Coiled Afro",
+        box_braids: "Knotless Scalp-Parted Box Braids",
+        pixie_cut: "Textured Edgy Pixie Cut",
+        half_up_curls: "Half-Up Half-Down Cascading Curls"
+      };
+
+      const nameEl = document.getElementById('random-hair-name');
+      if (nameEl) {
+        nameEl.innerText = readableNameMap[activeRandomHairKey] || activeRandomHairKey;
+      }
+    }
+
+    function triggerRandomHairRoll() {
+      // Ensure dropdown is switched to random hair if not already
+      const singleSelect = document.getElementById('single-hair-style-select');
+      singleSelect.value = 'random_hair_no_covering';
+      document.getElementById('random-hair-preview-badge').classList.remove('hidden');
+      pickRandomHairstyle();
+      buildPrompt();
+      showToastAlert('New open hairstyle rolled!');
+    }
+
+    // Single Image upload handling
+    function handleSingleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('single-img-preview').src = e.target.result;
+        document.getElementById('single-preview-container').classList.remove('hidden');
+        document.getElementById('single-empty-state').classList.add('hidden');
+        buildPrompt();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeSingleImage(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('upload-single-img').value = '';
+      document.getElementById('single-img-preview').src = '';
+      document.getElementById('single-preview-container').classList.add('hidden');
+      document.getElementById('single-empty-state').classList.remove('hidden');
+      buildPrompt();
+    }
+
+    // Dual Images upload handling
+    function handleDualImageUpload(event, index) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        if (index === 1) {
+          document.getElementById('dual-img-preview-1').src = e.target.result;
+          document.getElementById('dual-preview-container-1').classList.remove('hidden');
+          document.getElementById('dual-empty-state-1').classList.add('hidden');
+        } else {
+          document.getElementById('dual-img-preview-2').src = e.target.result;
+          document.getElementById('dual-preview-container-2').classList.remove('hidden');
+          document.getElementById('dual-empty-state-2').classList.add('hidden');
+        }
+        buildPrompt();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeDualImage(index, e) {
+      if (e) e.stopPropagation();
+      if (index === 1) {
+        document.getElementById('upload-dual-img-1').value = '';
+        document.getElementById('dual-img-preview-1').src = '';
+        document.getElementById('dual-preview-container-1').classList.add('hidden');
+        document.getElementById('dual-empty-state-1').classList.remove('hidden');
+      } else {
+        document.getElementById('upload-dual-img-2').value = '';
+        document.getElementById('dual-img-preview-2').src = '';
+        document.getElementById('dual-preview-container-2').classList.add('hidden');
+        document.getElementById('dual-empty-state-2').classList.remove('hidden');
+      }
+      buildPrompt();
+    }
+
+    // Switch between modes
+    function switchMode(mode) {
+      currentMode = mode;
+
+      const tabSingle = document.getElementById('tab-single');
+      const tabDual = document.getElementById('tab-dual');
+      const tabUgc = document.getElementById('tab-ugc');
+
+      const singleImgSec = document.getElementById('single-image-section');
+      const dualImgSec = document.getElementById('dual-images-section');
+
+      const singleCtrl = document.getElementById('single-controls-panel');
+      const dualCtrl = document.getElementById('dual-controls-panel');
+      const ugcCtrl = document.getElementById('ugc-controls-panel');
+
+      const inactiveClass = 'px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 text-slate-400 hover:text-slate-200';
+      const activeClass = 'px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 bg-brand-600 text-white shadow-md shadow-brand-600/30';
+
+      tabSingle.className = inactiveClass;
+      tabDual.className = inactiveClass;
+      tabUgc.className = inactiveClass;
+
+      singleImgSec.classList.add('hidden');
+      dualImgSec.classList.add('hidden');
+      singleCtrl.classList.add('hidden');
+      dualCtrl.classList.add('hidden');
+      ugcCtrl.classList.add('hidden');
+
+      if (mode === 'single') {
+        tabSingle.className = activeClass;
+        singleImgSec.classList.remove('hidden');
+        singleCtrl.classList.remove('hidden');
+      } else if (mode === 'dual') {
+        tabDual.className = activeClass;
+        dualImgSec.classList.remove('hidden');
+        dualCtrl.classList.remove('hidden');
+      } else if (mode === 'ugc') {
+        tabUgc.className = activeClass;
+        ugcCtrl.classList.remove('hidden');
+      }
+
+      buildPrompt();
+    }
+
+    // Apply quick presets
+    function applyPreset(preset) {
+      if (preset === 'clone_1to1') {
+        switchMode('single');
+        document.getElementById('single-aspect-select').value = '9:16 aspect ratio';
+        document.getElementById('single-subject-gender-select').value = 'woman';
+        document.getElementById('single-clothing-style-select').value = 'keep_original';
+        document.getElementById('single-hair-style-select').value = 'keep_original';
+        document.getElementById('random-hair-preview-badge').classList.add('hidden');
+        document.getElementById('single-pose-rule-select').value = 'exact_1to1';
+        document.getElementById('single-env-select').value = 'preserved_exact';
+        document.getElementById('single-camera-select').value = 'full_length';
+        document.getElementById('single-render-select').value = 'exact_wrap';
+      } else if (preset === 'hijab_chic') {
+        switchMode('single');
+        document.getElementById('single-aspect-select').value = '9:16 aspect ratio';
+        document.getElementById('single-clothing-style-select').value = 'smart_casual';
+        document.getElementById('single-hair-style-select').value = 'headwear_hijab_silk';
+        document.getElementById('random-hair-preview-badge').classList.add('hidden');
+        document.getElementById('single-pose-rule-select').value = 'exact_1to1';
+        document.getElementById('single-camera-select').value = 'full_length';
+      } else if (preset === 'random_hair') {
+        switchMode('single');
+        document.getElementById('single-aspect-select').value = '9:16 aspect ratio';
+        document.getElementById('single-clothing-style-select').value = 'minimalist_luxury';
+        triggerRandomHairRoll();
+      } else if (preset === 'old_money') {
+        switchMode('single');
+        document.getElementById('single-aspect-select').value = '9:16 aspect ratio';
+        document.getElementById('single-clothing-style-select').value = 'old_money';
+        document.getElementById('single-hair-style-select').value = 'beach_waves';
+        document.getElementById('random-hair-preview-badge').classList.add('hidden');
+        document.getElementById('single-pose-rule-select').value = 'exact_1to1';
+        document.getElementById('single-camera-select').value = 'full_length';
+      }
+      buildPrompt();
+    }
+
+    // Dynamic prompt assembly logic
+    function buildPrompt() {
+      const output = document.getElementById('prompt-output');
+
+      if (currentMode === 'single') {
+        const aspect = document.getElementById('single-aspect-select').value;
+        const gender = document.getElementById('single-subject-gender-select').value;
+        const clothingKey = document.getElementById('single-clothing-style-select').value;
+        const hairKey = document.getElementById('single-hair-style-select').value;
+        const poseRule = document.getElementById('single-pose-rule-select').value;
+        const env = document.getElementById('single-env-select').value;
+        const camera = document.getElementById('single-camera-select').value;
+        const render = document.getElementById('single-render-select').value;
+
+        // Pronoun & title adjustments
+        const subjectTitle = gender === 'woman' ? 'The woman' : (gender === 'man' ? 'The man' : 'The subject');
+        const pronounSubject = gender === 'woman' ? 'She' : (gender === 'man' ? 'He' : 'They');
+        const pronounPossessive = gender === 'woman' ? 'her' : (gender === 'man' ? 'his' : 'their');
+
+        // Dynamic attire sentence generation based on 15 styles
+        let attireSentence = "";
+        if (clothingKey === 'keep_original') {
+          attireSentence = `${pronounSubject} is wearing the same clothing and accessories shown in [Image 1].`;
+        } else {
+          const styleDescription = clothingStyleMap[clothingKey];
+          attireSentence = `Attire Modification: While maintaining ${pronounPossessive} exact body proportions and pose from [Image 1], ${pronounPossessive} clothing is redesigned into ${styleDescription}, styled with realistic garment drape, authentic fabric weave texture, clean seam construction, and natural cloth physics that conform strictly to ${pronounPossessive} current posture.`;
+        }
+
+        // Dynamic hair & headwear sentence generation
+        let hairSentence = "";
+        if (hairKey === 'keep_original') {
+          hairSentence = ``;
+        } else if (hairKey === 'random_hair_no_covering') {
+          const randomStyleDesc = hairStyleMap[activeRandomHairKey];
+          hairSentence = `Hairstyle Styling: While strictly retaining ${pronounPossessive} identical facial bone structure, eyebrows, eyes, and cosmetics from [Image 1], ${pronounPossessive} hair is styled into ${randomStyleDesc}, completely free of any headscarf, hijab, or head coverings.`;
+        } else if (hairKey.startsWith('headwear_')) {
+          const headwearDesc = hairStyleMap[hairKey];
+          hairSentence = `Headwear Styling: While strictly retaining ${pronounPossessive} identical facial features, eye gaze, and cosmetics from [Image 1], ${pronounPossessive} head is styled with ${headwearDesc}, integrating naturally with ${pronounPossessive} facial contours and the atmospheric lighting.`;
+        } else {
+          const openHairDesc = hairStyleMap[hairKey];
+          hairSentence = `Hairstyle Styling: While strictly retaining ${pronounPossessive} identical facial bone structure, eyebrows, eyes, and cosmetics from [Image 1], ${pronounPossessive} hair is styled into ${openHairDesc}, with natural strand separation, authentic micro-textures, and realistic specular highlights.`;
+        }
+
+        // Pose & stance replication clause
+        let poseText = "";
+        if (poseRule === 'exact_1to1') {
+          poseText = `Crucially, capture ${pronounPossessive} identical stance, posture, hand placement, and total body pose exactly as ${pronounSubject.toLowerCase()} appears in [Image 1].`;
+        } else if (poseRule === 'micro_motion') {
+          poseText = `Crucially, maintain ${pronounPossessive} foundational posture and hand placement from [Image 1] with subtle, organic talking micro-expressions and natural steady eye contact toward the camera lens.`;
+        } else if (poseRule === 'relaxed_pose') {
+          poseText = `Crucially, keep ${pronounPossessive} signature body proportion, facial bone structure, and weight distribution from [Image 1], adapted into a confident, grounded forward-facing standing stance.`;
+        } else {
+          poseText = `Crucially, adapt ${pronounPossessive} posture into a natural, elegant seated position while preserving identical head tilt, gaze direction, and facial geometry from [Image 1].`;
+        }
+
+        // Environment clause
+        let envText = "";
+        if (env === 'preserved_exact') {
+          envText = `The entire background environment, specific depth of field, atmospheric lighting, and color palette are preserved from [Image 1].`;
+        } else if (env === 'balcony_golden') {
+          envText = `Set against a high-rise golden hour balcony overlooking a softly blurred city horizon with warm ambient bokeh.`;
+        } else if (env === 'minimalist_interior') {
+          envText = `Positioned in a contemporary minimalist interior with architectural natural light and soft neutral decor.`;
+        } else {
+          envText = `Set on an authentic urban sidewalk bathed in daylight, framed with organic cinematic background depth.`;
+        }
+
+        // Framing
+        let camText = "";
+        if (camera === 'full_length') {
+          camText = "A cohesive, cinematic, full-length photograph with wide eye-level framing.";
+        } else if (camera === 'medium_closeup') {
+          camText = "A cohesive, cinematic medium close-up portrait with eye-level framing.";
+        } else if (camera === 'handheld_vlog') {
+          camText = "A cohesive, handheld smartphone vlog style wide-angle photograph with natural phone optics.";
+        } else {
+          camText = "A cohesive, authentic mirror selfie composition framed with natural phone grip.";
+        }
+
+        // Lighting & Fidelity
+        let renderText = "";
+        if (render === 'exact_wrap') {
+          renderText = "The atmospheric lighting from [Image 1] wraps naturally across the subject. The depth of field is consistent, and the subject is rendered with sharp, matching detail, authentic skin micro-texture, and high fidelity.";
+        } else if (render === 'iphone_natural') {
+          renderText = "Hyper-realistic skin fidelity, authentic phone camera texture, natural subtle micro-details, shot on iPhone 16 Pro, vlog high fidelity, clean focus with authentic optical depth of field.";
+        } else if (render === 'golden_hour_rim') {
+          renderText = "Golden hour sunset glow wrapping hair and skin in soft warm rim light, authentic pores, zero plastic sheen, realistic vlog aesthetic.";
+        } else {
+          renderText = "Diffused softbox fill light, ultra-high skin texture detail, clean optical bokeh, photorealistic commercial finish.";
+        }
+
+        // Clean assembly
+        const subjectClauses = [
+          `A direct composite extension of [Image 1].`,
+          `${subjectTitle} is an exact 1:1 replication from [Image 1]. Copy ${pronounPossessive} complete facial features, bone structure, head tilt, eyeline direction, expression, and cosmetics without deviation.`,
+          poseText,
+          attireSentence,
+          hairSentence,
+          envText
+        ].filter(c => c && c.trim().length > 0).join(' ');
+
+        const assembledSingle = `${aspect}:
+Primary Base Scene, Female Subject, & Pose ([Image 1]): ${subjectClauses}
+Composition & Render: ${camText} ${renderText}`;
+
+        output.value = assembledSingle;
+
+      } else if (currentMode === 'dual') {
+        const aspect = document.getElementById('dual-aspect-select').value;
+        const fidelity = document.getElementById('dual-fidelity-select').value;
+        const clothingKey = document.getElementById('dual-subject1-clothing-select').value;
+        const hairKey = document.getElementById('dual-subject1-hair-select').value;
+        const pos = document.getElementById('dual-pos-select').value;
+        const stance = document.getElementById('dual-stance-select').value;
+        const wardrobeSync = document.getElementById('dual-wardrobe-select').value;
+        const comp = document.getElementById('dual-comp-select').value;
+        const lighting = document.getElementById('dual-lighting-select').value;
+
+        // Dynamic attire sentence for Subject 1 in Dual Mode
+        let subject1AttireClause = "";
+        if (clothingKey === 'keep_original') {
+          subject1AttireClause = "She is wearing the same clothing and accessories shown in [Image 1].";
+        } else {
+          const styleDescription = clothingStyleMap[clothingKey];
+          subject1AttireClause = `Attire Modification: While maintaining her exact body proportions and pose from [Image 1], her clothing is redesigned into ${styleDescription}, styled with realistic garment drape, authentic fabric weave texture, clean seam construction, and natural cloth physics that conform strictly to her current posture.`;
+        }
+
+        // Dynamic hair / headwear sentence for Subject 1 in Dual Mode
+        let subject1HairClause = "";
+        if (hairKey === 'keep_original') {
+          subject1HairClause = "";
+        } else if (hairKey === 'random_hair_no_covering') {
+          const randomStyleDesc = hairStyleMap[activeRandomHairKey];
+          subject1HairClause = `Hairstyle Styling: While strictly retaining her facial bone structure, eyebrows, eyes, and cosmetics from [Image 1], her hair is styled into ${randomStyleDesc}, completely free of any headscarf, hijab, or head coverings.`;
+        } else if (hairKey.startsWith('headwear_')) {
+          const headwearDesc = hairStyleMap[hairKey];
+          subject1HairClause = `Headwear Styling: While strictly retaining her facial features, eye gaze, and cosmetics from [Image 1], her head is styled with ${headwearDesc}, integrating naturally with her facial contours and the atmospheric lighting.`;
+        } else {
+          const openHairDesc = hairStyleMap[hairKey];
+          subject1HairClause = `Hairstyle Styling: While strictly retaining her facial bone structure, eyebrows, eyes, and cosmetics from [Image 1], her hair is styled into ${openHairDesc}, with natural strand separation, authentic micro-textures, and realistic specular highlights.`;
+        }
+
+        let baseSubjectClause = "";
+        if (fidelity === 'strict') {
+          baseSubjectClause = `A direct composite extension of [Image 1]. The woman is an exact 1:1 replication from [Image 1]. Copy her complete facial features, bone structure, head tilt, eyeline direction, expression, and cosmetics without deviation. Crucially, capture her identical stance, posture, hand placement, and total body pose exactly as she appears in [Image 1]. ${subject1AttireClause} ${subject1HairClause} The entire background environment, specific depth of field, atmospheric lighting, and color palette are preserved from [Image 1].`;
+        } else if (fidelity === 'high') {
+          baseSubjectClause = `A high-fidelity composite extension of [Image 1]. The woman closely mirrors [Image 1], retaining her authentic facial bone structure, cosmetics, hairstyle, and gaze with organic micro-expression nuance. She holds her natural stance and body posture matching [Image 1]. ${subject1AttireClause} ${subject1HairClause} The background environment and atmospheric depth of field are strictly conserved from [Image 1].`;
+        } else {
+          baseSubjectClause = `A thematic continuity composite of [Image 1]. The woman retains her exact identity, facial structure, and signature beauty from [Image 1], adjusted naturally to a relaxed standing pose within the identical background architecture and lighting palette. ${subject1AttireClause} ${subject1HairClause}`;
+        }
+
+        // Secondary Subject Wardrobe clause
+        let wardrobeClause = "";
+        if (wardrobeSync === 'sample_prominent_solid') {
+          wardrobeClause = "For his attire, either his top or bottom garment must precisely match one prominent solid color sampled from the woman's outfit in [Image 1], styled in a clean solid fabric without adopting any of her clothing's prints or patterns; the remainder of his outfit consists of neutral, complementary solid tones.";
+        } else if (wardrobeSync === 'monochrome_sync') {
+          wardrobeClause = "For his attire, he wears tailored monochrome solids (charcoal, crisp white, or matte black) that seamlessly complement the woman's palette in [Image 1], without any conflicting logos or micro-patterns.";
+        } else if (wardrobeSync === 'earth_tone_duo') {
+          wardrobeClause = "For his attire, his garments are curated in neutral earth tones (warm espresso, sandy taupe, and brushed olive) harmonizing with the warm notes of the woman's outfit in [Image 1].";
+        } else {
+          wardrobeClause = "For his attire, he remains in the original garment style from [Image 2], naturally adapted to the environmental lighting and tone.";
+        }
+
+        const secondaryClause = `The man from [Image 2] stands ${pos}, integrated seamlessly into her environment at the same depth. He retains his exact facial identity and features from [Image 2], ${stance}. ${wardrobeClause}`;
+
+        let compFraming = "";
+        if (comp === 'full_length') {
+          compFraming = "A cohesive, cinematic, full-length two-shot photograph with wide eye-level framing.";
+        } else if (comp === 'medium_two_shot') {
+          compFraming = "A cohesive, medium two-shot portrait framed from the waist up at intimate eye-level.";
+        } else {
+          compFraming = "A cohesive, handheld smartphone vlog style wide-angle two-shot photograph with authentic perspective.";
+        }
+
+        let lightingPhrase = "";
+        if (lighting === 'wrap_natural') {
+          lightingPhrase = "The lighting from [Image 1] wraps naturally across both subjects. The depth of field is consistent, and both subjects are rendered with sharp, matching detail.";
+        } else if (lighting === 'diffused_soft') {
+          lightingPhrase = "Diffused ambient lighting envelopes both subjects seamlessly with natural light falloff, uniform depth of field, and crisp micro-textures.";
+        } else {
+          lightingPhrase = "A radiant golden hour sunlight rim wraps both subjects authentically, casting warm dimensional highlights while maintaining razor-sharp facial details.";
+        }
+
+        const assembledDual = `${aspect}:
+Primary Base Scene, Female Subject, & Pose ([Image 1]): ${baseSubjectClause.replace(/\s+/g, ' ').trim()}
+Secondary Subject ([Image 2]): ${secondaryClause}
+Composition & Render: ${compFraming} ${lightingPhrase}`;
+
+        output.value = assembledDual;
+
+      } else {
+        // Classic UGC Influencer Generator
+        const setting = document.getElementById('ugc-setting-select').value;
+        const camera = document.getElementById('ugc-camera-select').value;
+        const action = document.getElementById('ugc-action-select').value;
+        const lighting = document.getElementById('ugc-lighting-select').value;
+        const subject = document.getElementById('ugc-subject-input').value.trim();
+
+        const assembledUGC = `9:16 aspect ratio:
+${subject}. ${setting}. ${camera} composition. ${action}. Maintains steady eye contact, natural facial expressions, no over-acting. ${lighting}, hyper-realistic skin texture, vlog aesthetic, high fidelity, shot on iPhone.`;
+
+        output.value = assembledUGC;
+      }
+
+      updateMetrics();
+    }
+
+    // Reset current template
+    function resetCurrentFormula() {
+      if (currentMode === 'single') {
+        document.getElementById('single-aspect-select').value = '9:16 aspect ratio';
+        document.getElementById('single-subject-gender-select').value = 'woman';
+        document.getElementById('single-clothing-style-select').value = 'keep_original';
+        document.getElementById('single-hair-style-select').value = 'keep_original';
+        document.getElementById('random-hair-preview-badge').classList.add('hidden');
+        document.getElementById('single-pose-rule-select').value = 'exact_1to1';
+        document.getElementById('single-env-select').value = 'preserved_exact';
+        document.getElementById('single-camera-select').value = 'full_length';
+        document.getElementById('single-render-select').value = 'exact_wrap';
+      } else if (currentMode === 'dual') {
+        document.getElementById('dual-aspect-select').value = '9:16 aspect ratio';
+        document.getElementById('dual-fidelity-select').value = 'strict';
+        document.getElementById('dual-subject1-clothing-select').value = 'keep_original';
+        document.getElementById('dual-subject1-hair-select').value = 'keep_original';
+        document.getElementById('dual-pos-select').value = 'directly beside her on the right';
+        document.getElementById('dual-stance-select').value = 'standing noticeably taller than the woman, facing the camera with a neutral, grounded posture';
+        document.getElementById('dual-wardrobe-select').value = 'sample_prominent_solid';
+        document.getElementById('dual-comp-select').value = 'full_length';
+        document.getElementById('dual-lighting-select').value = 'wrap_natural';
+      } else {
+        document.getElementById('ugc-setting-select').value = 'Golden Hour Balcony overlooking city skyline';
+        document.getElementById('ugc-camera-select').value = 'Handheld Smartphone Footage (slight wobble)';
+        document.getElementById('ugc-action-select').value = 'GRWM Outfit Transition (before/after snap)';
+        document.getElementById('ugc-lighting-select').value = 'Golden Hour Sunset glow';
+        document.getElementById('ugc-subject-input').value = 'Exactly one beautiful woman, early 20s, minimal makeup, wavy brunette hair, glowing skin. wearing Oversized beige blazer and gold necklaces';
+      }
+      buildPrompt();
+      showToastAlert('Reset to base template');
+    }
+
+    function formatWhitespace() {
+      const output = document.getElementById('prompt-output');
+      const lines = output.value.split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(l => l.length > 0);
+      output.value = lines.join('\n');
+      updateMetrics();
+      showToastAlert('Formatted whitespace');
+    }
+
+    function updateMetrics() {
+      const text = document.getElementById('prompt-output').value || '';
+      const charCount = text.length;
+      const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+
+      document.getElementById('char-count').innerText = charCount;
+      document.getElementById('word-count').innerText = wordCount;
+    }
+
+    function copyPromptToClipboard() {
+      const output = document.getElementById('prompt-output');
+      const text = output.value;
+
+      output.select();
+      output.setSelectionRange(0, 99999);
+
+      let success = false;
+      try {
+        success = document.execCommand('copy');
+      } catch (e) {
+        success = false;
+      }
+
+      if (!success && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => showToastAlert('Prompt copied to clipboard!')).catch(() => showToastAlert('Prompt copied to clipboard!'));
+      } else {
+        showToastAlert('Prompt copied to clipboard!');
+      }
+    }
+
+    function showToastAlert(message) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toast-text');
+      const copyBtnText = document.getElementById('copy-btn-text');
+      const copyIcon = document.getElementById('copy-icon');
+
+      if (toastText) toastText.textContent = message;
+      if (copyBtnText) copyBtnText.textContent = 'Copied!';
+      if (copyIcon) copyIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>`;
+
+      toast.classList.remove('opacity-0', 'translate-y-20', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-20', 'pointer-events-none');
+        if (copyBtnText) copyBtnText.textContent = 'Copy UGC Prompt';
+        if (copyIcon) copyIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>`;
+      }, 2400);
+    }
+
+    // Initialize application on load
+    window.onload = function() {
+      switchMode('single');
+    };
+  </script>
+</body>
+</html>
